@@ -1,0 +1,9 @@
+---
+slug: :mikutter_openimg_window_size
+depends:
+  mikutter: 3.8.3
+  plugin: []
+version: '1.0'
+author: shibafu528
+name: openimg_window_size
+description: ''
