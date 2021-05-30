@@ -23,32 +23,38 @@ Plugin.create(:mikutter_openimg_window_size) do
   
 end
 
-class Plugin::Openimg::Window
+module Plugin::OpenimgWindowSize
+  module Overrides
+    def default_size
+      case UserConfig[:openimg_window_size_reference]
+      when :full
+        width = screen.width
+        height = screen.height
+      when :mainwindow
+        mainwindow = Plugin[:gtk].widgetof(Plugin::GUI::Window.instance(:default))
+        geometry = screen.monitor_geometry(screen.get_monitor(mainwindow.window))
+        width = geometry.width
+        height = geometry.height
+      when :manual
+        monitor = UserConfig[:openimg_window_size_reference_manual_num]
+        max_monitor = screen.n_monitors
+        if monitor > max_monitor
+          monitor = 0
+        end
 
-  def default_size
-    case UserConfig[:openimg_window_size_reference]
-    when :full
-      width = screen.width
-      height = screen.height
-    when :mainwindow
-      mainwindow = Plugin[:gtk].widgetof(Plugin::GUI::Window.instance(:default))
-      geometry = screen.monitor_geometry(screen.get_monitor(mainwindow.window))
-      width = geometry.width
-      height = geometry.height
-    when :manual
-      monitor = UserConfig[:openimg_window_size_reference_manual_num]
-      max_monitor = screen.n_monitors
-      if monitor > max_monitor
-        monitor = 0
+        geometry = screen.monitor_geometry(monitor)
+        width = geometry.width
+        height = geometry.height
       end
 
-      geometry = screen.monitor_geometry(monitor)
-      width = geometry.width
-      height = geometry.height
+      @size || [width * (UserConfig[:openimg_window_size_width_percent] / 100.0),
+                height * (UserConfig[:openimg_window_size_height_percent] / 100.0)]
     end
-
-    @size || [width * (UserConfig[:openimg_window_size_width_percent] / 100.0),
-              height * (UserConfig[:openimg_window_size_height_percent] / 100.0)]
   end
-  
+end
+
+if defined? Plugin::OpenimgGtk::Window
+  Plugin::OpenimgGtk::Window.prepend(Plugin::OpenimgWindowSize::Overrides)
+else
+  Plugin::Openimg::Window.prepend(Plugin::OpenimgWindowSize::Overrides)
 end
