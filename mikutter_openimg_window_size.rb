@@ -31,8 +31,9 @@ module Plugin::OpenimgWindowSize
         width = screen.width
         height = screen.height
       when :mainwindow
-        mainwindow = Plugin[:gtk].widgetof(Plugin::GUI::Window.instance(:default))
-        geometry = screen.monitor_geometry(screen.get_monitor(mainwindow.window))
+        gtk = Plugin.instance_exist?(:gtk) ? Plugin[:gtk] : Plugin[:gtk3]
+        mainwindow = gtk.widgetof(Plugin::GUI::Window.instance(:default))
+        geometry = Plugin::OpenimgWindowSize.get_monitor_geometry(screen, screen.get_monitor(mainwindow.window))
         width = geometry.width
         height = geometry.height
       when :manual
@@ -42,13 +43,21 @@ module Plugin::OpenimgWindowSize
           monitor = 0
         end
 
-        geometry = screen.monitor_geometry(monitor)
+        geometry = Plugin::OpenimgWindowSize.get_monitor_geometry(screen, monitor)
         width = geometry.width
         height = geometry.height
       end
 
       @size || [width * (UserConfig[:openimg_window_size_width_percent] / 100.0),
                 height * (UserConfig[:openimg_window_size_height_percent] / 100.0)]
+    end
+  end
+
+  def self.get_monitor_geometry(screen, monitor)
+    if screen.respond_to?(:monitor_geometry)
+      screen.monitor_geometry(monitor)
+    else
+      screen.get_monitor_geometry(monitor)
     end
   end
 end
